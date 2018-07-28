@@ -61,7 +61,8 @@
 
     </dl>
 
-    @using (Html.BeginForm()) {
+    @using (Html.BeginForm())
+    {
         @Html.AntiForgeryToken()
 
         <div class="form-actions no-color">
@@ -70,3 +71,7 @@
         </div>
     }
 </div>
+
+@section breadcrumb{
+    <li>@Html.ActionLink("目前頁面-客戶銀行資訊", "Index", "CustomerBankData", null, new { @style = "font-weight: bold;color:red" })</li>
+}

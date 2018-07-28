@@ -2,25 +2,42 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Entity;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Web;
 using System.Web.Mvc;
+using ClosedXML.Excel;
 using FirstWeekWorkTest.Models;
+using Omu.ValueInjecter;
 
 namespace FirstWeekWorkTest.Controllers
 {
-    public class CustomerBankDataController : Controller
+    public class CustomerBankDataController : BaseController
     {
-        private 客戶資料Entities1 db = new 客戶資料Entities1();
+        //private 客戶資料Entities1 db = new 客戶資料Entities1();
 
-        // GET: CustomerBankData
-        public ActionResult Index()
+        客戶銀行資訊Repository customerBankDatasRepo;
+        客戶資料Repository customerDatasRepo;
+
+        
+        public CustomerBankDataController()
         {
-            var 客戶銀行資訊 = db.客戶銀行資訊.Include(客 => 客.客戶資料);
-            return View(客戶銀行資訊.ToList());
+            customerBankDatasRepo = RepositoryHelper.Get客戶銀行資訊Repository();
+            customerDatasRepo = RepositoryHelper.Get客戶資料Repository();
         }
 
+        [HandleError(View = "Error")]
+        // GET: CustomerBankData
+        public ActionResult Index(string sortOrder, string CurrentSort, int? page)
+        {
+            ViewBag.CurrentSort = sortOrder;
+            var pageListModle = customerBankDatasRepo.GetCustomerBankDatasPagedList(sortOrder, CurrentSort, page);            
+            return View(pageListModle);
+        }
+
+
+        [HandleError(View="Error")]
         // GET: CustomerBankData/Details/5
         public ActionResult Details(int? id)
         {
@@ -28,7 +45,8 @@ namespace FirstWeekWorkTest.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            客戶銀行資訊 客戶銀行資訊 = db.客戶銀行資訊.Find(id);
+            客戶銀行資訊 客戶銀行資訊 = customerBankDatasRepo.Find(id.Value);
+            
             if (客戶銀行資訊 == null)
             {
                 return HttpNotFound();
@@ -39,7 +57,7 @@ namespace FirstWeekWorkTest.Controllers
         // GET: CustomerBankData/Create
         public ActionResult Create()
         {
-            ViewBag.客戶Id = new SelectList(db.客戶資料, "Id", "客戶名稱");
+            SetCustomerDataDropDown();
             return View();
         }
 
@@ -47,34 +65,49 @@ namespace FirstWeekWorkTest.Controllers
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
+        [HandleError(View = "Error")]
         [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "Id,客戶Id,銀行名稱,銀行代碼,分行代碼,帳戶名稱,帳戶號碼")] 客戶銀行資訊 客戶銀行資訊)
+        public ActionResult Create(客戶銀行資訊 客戶銀行資訊)
         {
             if (ModelState.IsValid)
             {
-                db.客戶銀行資訊.Add(客戶銀行資訊);
-                db.SaveChanges();
+                customerBankDatasRepo.Add(客戶銀行資訊);
+                customerBankDatasRepo.UnitOfWork.Commit();
                 return RedirectToAction("Index");
             }
-
-            ViewBag.客戶Id = new SelectList(db.客戶資料, "Id", "客戶名稱", 客戶銀行資訊.客戶Id);
+            SetCustomerDataDropDown();
             return View(客戶銀行資訊);
         }
 
         // GET: CustomerBankData/Edit/5
+        [HandleError(View = "Error")]
         public ActionResult Edit(int? id)
         {
             if (id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            客戶銀行資訊 客戶銀行資訊 = db.客戶銀行資訊.Find(id);
+            客戶銀行資訊 客戶銀行資訊 = customerBankDatasRepo.Find(id.Value);
             if (客戶銀行資訊 == null)
             {
                 return HttpNotFound();
             }
-            ViewBag.客戶Id = new SelectList(db.客戶資料, "Id", "客戶名稱", 客戶銀行資訊.客戶Id);
+            SetCustomerDataDropDown();
             return View(客戶銀行資訊);
+        }
+
+        public void SetCustomerDataDropDown()
+        {
+            // Must Change! 
+            var dictionary = new Dictionary<int, string>();
+
+            var customerIDList = customerDatasRepo.All();
+
+            foreach (var item in customerIDList)
+            {
+                dictionary.Add(item.Id, item.客戶名稱);
+            }
+            ViewBag.客戶Id = new SelectList(dictionary, "Key", "Value");
         }
 
         // POST: CustomerBankData/Edit/5
@@ -82,16 +115,18 @@ namespace FirstWeekWorkTest.Controllers
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit([Bind(Include = "Id,客戶Id,銀行名稱,銀行代碼,分行代碼,帳戶名稱,帳戶號碼")] 客戶銀行資訊 客戶銀行資訊)
+        public ActionResult Edit(int id, 客戶銀行資訊 form)
         {
+            var customerdata = customerBankDatasRepo.Find(id);
+
             if (ModelState.IsValid)
             {
-                db.Entry(客戶銀行資訊).State = EntityState.Modified;
-                db.SaveChanges();
+                customerdata.InjectFrom(form);
+                customerBankDatasRepo.UnitOfWork.Commit();
                 return RedirectToAction("Index");
             }
-            ViewBag.客戶Id = new SelectList(db.客戶資料, "Id", "客戶名稱", 客戶銀行資訊.客戶Id);
-            return View(客戶銀行資訊);
+            SetCustomerDataDropDown();
+            return View(customerdata);
         }
 
         // GET: CustomerBankData/Delete/5
@@ -101,7 +136,7 @@ namespace FirstWeekWorkTest.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            客戶銀行資訊 客戶銀行資訊 = db.客戶銀行資訊.Find(id);
+            客戶銀行資訊 客戶銀行資訊 = customerBankDatasRepo.Find(id.Value);
             if (客戶銀行資訊 == null)
             {
                 return HttpNotFound();
@@ -114,9 +149,9 @@ namespace FirstWeekWorkTest.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult DeleteConfirmed(int id)
         {
-            客戶銀行資訊 客戶銀行資訊 = db.客戶銀行資訊.Find(id);
-            db.客戶銀行資訊.Remove(客戶銀行資訊);
-            db.SaveChanges();
+            客戶銀行資訊 客戶銀行資訊 = customerBankDatasRepo.Find(id);
+            customerBankDatasRepo.Delete(客戶銀行資訊);
+            customerBankDatasRepo.UnitOfWork.Commit();
             return RedirectToAction("Index");
         }
 
@@ -124,9 +159,42 @@ namespace FirstWeekWorkTest.Controllers
         {
             if (disposing)
             {
-                db.Dispose();
+                customerBankDatasRepo.UnitOfWork.Context.Dispose();
             }
             base.Dispose(disposing);
+        }
+
+
+        /// <summary>
+        /// EXCEL 輸出客戶銀行資料;
+        /// </summary>
+        /// <returns></returns>
+        public ActionResult ExportCustomerBankDatasExcel()
+        {
+            using (XLWorkbook wb = new XLWorkbook())
+            {
+                var data = customerBankDatasRepo.All().Select(c => new
+                {
+                    c.客戶資料.客戶名稱,
+                    c.銀行代碼,
+                    c.分行代碼,
+                    c.銀行名稱,
+                    c.帳戶名稱,
+                    c.帳戶號碼,
+                }).ToList();
+
+                var ws = wb.Worksheets.Add("cusBankdata", 1);
+                ws.Cell(1, 1).InsertData(data);
+
+                using (MemoryStream memoryStream = new MemoryStream())
+                {
+                    wb.SaveAs(memoryStream);
+                    memoryStream.Seek(0, SeekOrigin.Begin);
+                    // application/vnd.ms-excel
+                    return this.File(memoryStream.ToArray(), "application/vnd.ms-excel", "客戶銀行資料.xlsx");
+                }
+            }
+
         }
     }
 }

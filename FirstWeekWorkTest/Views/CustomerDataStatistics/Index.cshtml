@@ -5,16 +5,21 @@
 @using PagedList.Mvc;
 
 @{
-    ViewBag.Title = "客戶資訊-統計資料";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "客戶資訊-統計資料";    
 }
 
+
+<link href="~/Content/PagedList.css" rel="stylesheet" />
 
 <h2>客戶資訊-統計資料</h2>
 
 
 <table class="table">
     <tr>
+        <th style="border: 2px solid black; text-align: center; width: 12%">
+            @Html.ActionLink("客戶ID", "Index",
+        new { sortOrder = "客戶ID", CurrentSort = ViewBag.CurrentSort })
+        </th>
 
         <th style="border: 2px solid black; text-align: center; width: 12%">
             @Html.ActionLink("客戶名稱", "Index",
@@ -23,38 +28,20 @@
 
         <th style="border: 2px solid black; text-align: center; width: 12%">
             @Html.ActionLink("聯絡人數量", "Index",
-        new { sortOrder = "客戶名稱", CurrentSort = ViewBag.CurrentSort })
+        new { sortOrder = "聯絡人數量", CurrentSort = ViewBag.CurrentSort })
         </th>
         <th style="border: 2px solid black; text-align: center; width: 12%">
             @Html.ActionLink("銀行帳戶數量", "Index",
-        new { sortOrder = "客戶名稱", CurrentSort = ViewBag.CurrentSort })
+        new { sortOrder = "銀行帳戶數量", CurrentSort = ViewBag.CurrentSort })
         </th>
-
-        @*<th>
-                @Html.DisplayNameFor(model => model.FirstOrDefault().客戶名稱)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.FirstOrDefault().聯絡人數量)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.FirstOrDefault().銀行帳戶數量)
-            </th>*@
-
     </tr>
 
     @foreach (var item in Model)
     {
         <tr>
-            @*<td>
-                    @Html.DisplayFor(modelItem => item.客戶名稱)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.聯絡人數量)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.銀行帳戶數量)
-                </td>*@
-
+            <td style="border: 2px solid black; text-align: center; word-wrap: break-word;">
+                @Html.DisplayFor(modelItem => item.ID)
+            </td>
             <td style="border: 2px solid black; text-align: center; word-wrap: break-word;">
                 @Html.DisplayFor(modelItem => item.客戶名稱)
             </td>
@@ -64,8 +51,6 @@
             <td style="border: 2px solid black; text-align: center; word-wrap: break-word;">
                 @Html.DisplayFor(modelItem => item.銀行帳戶數量)
             </td>
-
-
         </tr>
     }
 

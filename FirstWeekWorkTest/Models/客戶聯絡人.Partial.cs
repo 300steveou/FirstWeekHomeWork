@@ -1,5 +1,6 @@
 namespace FirstWeekWorkTest.Models
 {
+    using FirstWeekWorkTest.Models.InputValidations;
     using System;
     using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations;
@@ -9,7 +10,8 @@ namespace FirstWeekWorkTest.Models
     {
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
-            var result = RepositoryHelper.Get客戶聯絡人Repository().IsRepeatEMail(this.客戶Id,this.Email);
+            
+            var result = RepositoryHelper.Get客戶聯絡人Repository().IsRepeatEMail(this.Id,this.客戶Id,this.Email);
 
             if (result)
             {
@@ -39,7 +41,8 @@ namespace FirstWeekWorkTest.Models
         [RegularExpression(@"^([\w-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([\w-]+\.)+))([a-zA-Z]{2,4})$", ErrorMessage = "請輸入正確的電子郵件位址.")]
 
         public string Email { get; set; }
-       [StringLength(50, ErrorMessage="欄位長度不得大於 50 個字元")]        
+       [StringLength(50, ErrorMessage="欄位長度不得大於 50 個字元")]
+        [CellPhoneFormatValid]
         public string 手機 { get; set; }
         
         [StringLength(50, ErrorMessage="欄位長度不得大於 50 個字元")]

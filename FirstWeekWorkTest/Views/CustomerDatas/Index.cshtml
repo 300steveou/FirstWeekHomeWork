@@ -1,8 +1,11 @@
-﻿@model IEnumerable<FirstWeekWorkTest.Models.客戶資料>
+﻿@model IPagedList<FirstWeekWorkTest.Models.客戶資料>
+@using PagedList;
+@using PagedList.Mvc;
 
 @{
-    ViewBag.Title = "Index";
+    ViewBag.Title = "客戶資料";
 }
+<link href="~/Content/PagedList.css" rel="stylesheet" />
 
 <h2>客戶資料</h2>
 
@@ -40,66 +43,85 @@
 <p>
     @Html.ActionLink("Create New", "Create")
 </p>
-<table class="table">
-    <tr>
+
+<table class="table" align="center"  >
+    <tr style="background-color:dodgerblue">
         <th>
-            @Html.DisplayNameFor(model => model.客戶名稱)
+            @Html.DisplayNameFor(model => model.FirstOrDefault().客戶名稱)           
+        </th>
+
+        <th>
+            @Html.DisplayNameFor(model => model.FirstOrDefault().客戶分類)           
+        </th>
+
+        <th>
+            @Html.DisplayNameFor(model => model.FirstOrDefault().統一編號)          
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.客戶分類)
+            @Html.DisplayNameFor(model => model.FirstOrDefault().電話)
+         
+        </th>      
+        <th>
+            @Html.DisplayNameFor(model => model.FirstOrDefault().地址)           
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.統一編號)
+            @Html.DisplayNameFor(model => model.FirstOrDefault().Email)          
         </th>
+
         <th>
-            @Html.DisplayNameFor(model => model.電話)
+            @Html.ActionLink("修改/內容/刪除", "Index",
+        new { sortOrder = "Id", CurrentSort = ViewBag.CurrentSort })
         </th>
-        <th>
-            @Html.DisplayNameFor(model => model.傳真)
-        </th>
-        <th>
-            @Html.DisplayNameFor(model => model.地址)
-        </th>
-        <th>
-            @Html.DisplayNameFor(model => model.Email)
-        </th>
-        <th></th>
+
+
     </tr>
 
     @foreach (var item in Model)
     {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.客戶名稱)
-            </td>
-            <td>
-                @*@Html.DisplayFor(modelItem => item.客戶分類)*@
-                @*@Html.DisplayFor(modelItem => item.客戶分類.GetType().GetEnumName)*@
+    <tr >
+        @Html.HiddenFor(model => model.FirstOrDefault().Id)
+        
+        <td>
+            @Html.DisplayFor(modelItem => item.客戶名稱)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.客戶分類)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.統一編號)
+        </td>
 
-                @*@Html.DisplayFor(modelItem => item.客戶分類.ToString())*@
+        <td>
+            @Html.DisplayFor(modelItem => item.電話)
+        </td>
 
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.統一編號)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.電話)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.傳真)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.地址)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Email)
-            </td>
-            <td>
-                @Html.ActionLink("Edit", "Edit", new { id = item.Id }) |
-                @Html.ActionLink("Details", "Details", new { id = item.Id }) |
-                @Html.ActionLink("Delete", "Delete", new { id = item.Id })
-            </td>
-        </tr>
+       
+
+
+        <td>
+            @Html.DisplayFor(modelItem => item.地址)
+        </td>
+
+        <td>
+            @Html.DisplayFor(modelItem => item.Email)
+        </td>
+
+        <td>
+            @Html.ActionLink("Edit", "Edit", new { id = item.Id }) |
+            @Html.ActionLink("Details", "Details", new { id = item.Id }) |
+            @Html.ActionLink("Delete", "Delete", new { id = item.Id })
+        </td>
+
+    </tr>
     }
 
 </table>
+
+
+
+<div id='Paging' style="text-align: center">
+    Page @(Model.PageCount < Model.PageNumber ? 0 : Model.PageNumber)
+        of @Model.PageCount
+
+        @Html.PagedListPager(Model, page => Url.Action("Index", new { page }))
+</div>

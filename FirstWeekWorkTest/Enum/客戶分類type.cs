@@ -7,6 +7,7 @@ using System.Web;
 
 namespace FirstWeekWorkTest.Enum
 {
+    
     public enum 客戶分類type
     {
         [Display(Name = "一般會員")]

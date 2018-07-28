@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Web;
 
 namespace FirstWeekWorkTest.Models.InputValidations
@@ -16,18 +17,24 @@ namespace FirstWeekWorkTest.Models.InputValidations
         // Over Ride Valid
         public override bool IsValid(object value)
         {
-            // object to value->convert type.
+            if (value == null)
+            {
+                return true;
+            }
+
             string str = (string)value;
+            if (str == String.Empty)
+            {
+                return true;
+            }
             return isFormatCorrect(str);
         }
 
-        public bool isFormatCorrect(string arg_email)
-        {
-            //"^(/(/d{3,4}-)|/d{3.4}-)?/d{7,8}$"
-            //string pattern = @"^(/(/d{3,4}-)|/d{3.4}-)?/d{7,8}$";
-         
-
-            return true;
+        public bool isFormatCorrect(string inputCellPhone)
+        {          
+            string pattern = @"[0-9]{4}\-[0-9]{6}"; // 規則字串
+            var result=Regex.IsMatch(inputCellPhone, pattern);
+            return result;
         }
 
     }

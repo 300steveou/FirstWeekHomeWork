@@ -1,4 +1,3 @@
-﻿using System;
 using System.Data.Entity;
 
 namespace FirstWeekWorkTest.Models
@@ -14,15 +13,7 @@ namespace FirstWeekWorkTest.Models
 
 		public void Commit()
 		{
-            try
-            {
-                Context.SaveChanges();
-            }
-            catch(Exception)
-            {
-                throw;
-            }
-			
+			Context.SaveChanges();
 		}
 		
 		public bool LazyLoadingEnabled

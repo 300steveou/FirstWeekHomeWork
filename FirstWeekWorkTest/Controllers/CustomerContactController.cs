@@ -1,18 +1,18 @@
-﻿using System;
+﻿using ClosedXML.Excel;
+using FirstWeekWorkTest.Models;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Entity;
+using System.Data.Entity.Validation;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Web;
 using System.Web.Mvc;
-using ClosedXML.Excel;
-using FirstWeekWorkTest.Models;
 
 namespace FirstWeekWorkTest.Controllers
 {
-    public class CustomerContactController : Controller
+    public class CustomerContactController : BaseController
     {
         客戶聯絡人Repository customerContactRepo;
         客戶資料Repository customerDataRepo;
@@ -24,69 +24,42 @@ namespace FirstWeekWorkTest.Controllers
         }
 
         // GET: CustomerContact
-        public ActionResult Index()
-        {            
-            var customerContact = customerContactRepo.AllData();
-            ViewBag.JobTitlesItems = SetJobTitleItems();
-            return View(customerContact);
-        }
-
-
-        public ActionResult SearchForCustomerContact(string SearchContactName,string SearchJobTitle)
+        public ActionResult Index(string sortOrder, string CurrentSort, int? page)
         {
-            var customerdata = customerContactRepo.AllData();
-
-            if (!string.IsNullOrEmpty(SearchContactName)){
-
-                customerdata= customerdata.Where(a => a.姓名.Contains(SearchContactName)).ToList();
-
-            }
-
-            if (!string.IsNullOrEmpty(SearchJobTitle))
-            {
-                customerdata = customerdata.Where(a => a.職稱 == SearchJobTitle).ToList();
-            }
+            ViewBag.CurrentSort = sortOrder;
+            var pageListModle = customerContactRepo.GetCustomerContactDataPagedList(sortOrder, CurrentSort, page,string.Empty,string.Empty);
             ViewBag.JobTitlesItems = SetJobTitleItems();
-            return View("Index", customerdata);
+            return View(pageListModle);
+        }
+        
+        public ActionResult SearchForCustomerContact(string SearchContactName, string SearchJobTitle)
+        {           
+            var pageListModle = customerContactRepo.GetCustomerContactDataPagedList(string.Empty, string.Empty, null, SearchContactName, SearchJobTitle);
+            ViewBag.JobTitlesItems = SetJobTitleItems();
+            return View("Index",pageListModle);            
         }
 
         public List<SelectListItem> SetJobTitleItems()
         {
-          
             List<SelectListItem> items = new List<SelectListItem>();
-            items.Add(new SelectListItem { Text = "請選擇", Value="0" });
-            var category = customerContactRepo.All().Select(c => new SelectListItem { Text = c.職稱.ToString(), Value = c.職稱.ToString() }).ToList();
-            
-            foreach(var item in category)
+            items.Add(new SelectListItem { Text = "請選擇", Value = "" });
+            var category = customerContactRepo.All().Select(c => new SelectListItem { Text = c.職稱.ToString(), Value = c.職稱.ToString() }).Distinct().ToList();
+
+            foreach (var item in category)
             {
                 items.Add(item);
-            }            
+            }
             return items;
         }
 
-        //輸出excel
-        public ActionResult FileTest(string dl)
-        {
-            if (String.IsNullOrEmpty(dl))
-            {
-                //application / vnd.ms - excel
-                return File(Server.MapPath("~/App_Data/fifa-18-world-cup.jpg"),
-                    "application/vnd.ms-excel");
-            }
-            else
-            {
-                return File(Server.MapPath("~/App_Data/fifa-18-world-cup.jpg"),
-                    "image/jpeg");
-            }
-        }
-
+        //輸出excel       
         public ActionResult CusContactExport()
         {
             //ClosedXML的用法 先new一個Excel Workbook
             using (XLWorkbook wb = new XLWorkbook())
             {
                 //取得我要塞入Excel內的資料
-                var data = customerContactRepo.All().Select(c => new { c.客戶Id, c.姓名, c.手機,c.職稱 });
+                var data = customerContactRepo.All().Select(c => new { c.客戶Id, c.姓名, c.手機, c.職稱 });
 
                 //一個wrokbook內至少會有一個worksheet,並將資料Insert至這個位於A1這個位置上
                 var ws = wb.Worksheets.Add("cusdata", 1);
@@ -101,15 +74,12 @@ namespace FirstWeekWorkTest.Controllers
                     //請注意 一定要加入這行,不然Excel會是空檔
                     memoryStream.Seek(0, SeekOrigin.Begin);
                     //注意Excel的ContentType,是要用這個"application/vnd.ms-excel" 不曉得為什麼網路上有的Excel ContentType超長,xlsx會錯 xls反而不會
-                    return this.File(memoryStream.ToArray(), "application/vnd.ms-excel", "Download.xlsx");
+                    return this.File(memoryStream.ToArray(), "application/vnd.ms-excel", "客戶聯絡人資料.xlsx");
                 }
             }
         }
 
-
-
-
-
+        
         // GET: CustomerContact/Details/5
         public ActionResult Details(int? id)
         {
@@ -145,11 +115,10 @@ namespace FirstWeekWorkTest.Controllers
             {
                 customerContactRepo.Add(客戶聯絡人);
                 customerContactRepo.UnitOfWork.Commit();
-                return RedirectToAction("Index");               
+                return RedirectToAction("Index");
             }
             var a = customerDataRepo.All();
-            ViewBag.客戶Id = new SelectList(a, "Id", "客戶名稱", 客戶聯絡人.客戶Id);
-            //ViewBag.客戶Id = new SelectList(db.客戶資料, "Id", "客戶名稱", 客戶聯絡人.客戶Id);
+            ViewBag.客戶Id = new SelectList(a, "Id", "客戶名稱", 客戶聯絡人.客戶Id);            
             return View(客戶聯絡人);
         }
 
@@ -185,7 +154,7 @@ namespace FirstWeekWorkTest.Controllers
                 return RedirectToAction("Index");
             }
             var a = customerDataRepo.All();
-            
+
             ViewBag.客戶Id = new SelectList(a, "Id", "客戶名稱", 客戶聯絡人.客戶Id);
             return View(客戶聯絡人);
         }
@@ -210,7 +179,7 @@ namespace FirstWeekWorkTest.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult DeleteConfirmed(int id)
         {
-            客戶聯絡人 客戶聯絡人 = customerContactRepo.Find(id);            
+            客戶聯絡人 客戶聯絡人 = customerContactRepo.Find(id);
             customerContactRepo.UnitOfWork.Commit();
             return RedirectToAction("Index");
         }
@@ -222,6 +191,33 @@ namespace FirstWeekWorkTest.Controllers
                 customerContactRepo.UnitOfWork.Context.Dispose();
             }
             base.Dispose(disposing);
+        }
+
+        /// <summary>
+        /// 批次新增;
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost]
+        [HandleError(ExceptionType = typeof(DbEntityValidationException), View = "Error_DbEntityValidationException")]
+        public ActionResult BatchUpdate(IList<CustomerContactVM> datas)
+        {
+            //ps: 記得在web config加上<customErrors mode="On"></customErrors>
+            if (ModelState.IsValid)
+            {
+                foreach (var items in datas)
+                {
+                    var data = customerContactRepo.Find(items.Id);
+                    data.Email = items.Email;
+                    data.手機 = items.手機;
+                    data.電話 = items.電話;
+                }
+                var db = customerContactRepo.UnitOfWork.Context;            
+                db.SaveChanges();
+            }
+            ViewData.Model = customerContactRepo.AllData();
+            ViewBag.JobTitlesItems = SetJobTitleItems();
+            return RedirectToAction("Index");
+
         }
     }
 }

@@ -64,3 +64,7 @@
     @Html.ActionLink("Edit", "Edit", new { id = Model.Id }) |
     @Html.ActionLink("Back to List", "Index")
 </p>
+
+@*id模型綁定,用action方式去接 也可以用partial去接*@
+@*@Html.Action("Details_CustomerContactList", new { id = Model.Id })*@
+@Html.Partial("CustomerContactList", Model.客戶聯絡人.Where(c=>c.客戶Id==Model.Id).ToList())
